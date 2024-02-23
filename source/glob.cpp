@@ -206,13 +206,20 @@ namespace Glob
     {
         // search for first wildcard
         // ignore square brackets for now
+        int lastPathSeparator = 0;
+
         for (int characterIndex = 0; characterIndex < glob.size(); ++characterIndex)
         {
             const char currentGlobCharacter = glob[characterIndex];
 
+            if(currentGlobCharacter == '/')
+            {
+                lastPathSeparator = characterIndex + 1;
+            }
+
             if (currentGlobCharacter == '?' || currentGlobCharacter == '*')
             {
-                return glob.substr(0, characterIndex);
+                return glob.substr(0, lastPathSeparator);
             }
         }
 
