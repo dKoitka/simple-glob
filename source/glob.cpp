@@ -14,64 +14,10 @@ namespace Glob
         doubleAsterisk
     };
 
-    void ThrowError()
-    {
-        std::cout << "Dan, what the fuck. No tripple asterisks, lol" << std::endl;
-    }
-
-    void Report()
-    {
-        std::cout << "test" << std::endl;
-    }
-
-    int branchCount = 0;
-    int iterationCount = 0;
-
-    void PrintCounts()
-    {
-        std::cout
-            << "stats:" << std::endl
-            << "\tBranchCount: " << branchCount << std::endl
-            << "\tIterationCount: " << iterationCount << std::endl;
-    }
-
-    void doPrint(const std::string &stringToTest, int stringPointer, const std::string &glob, int globPointer, SearchState state)
-    {
-        int integerSize = 2;
-
-        std::string stateType;
-
-        switch (state)
-        {
-        case SearchState::normal:
-            stateType = "normal";
-            break;
-        case SearchState::asterisk:
-            stateType = "asterisk";
-            break;
-        case SearchState::doubleAsterisk:
-            stateType = "doubleAsterisk";
-            break;
-        default:
-            stateType = "????";
-            break;
-        }
-
-        printf("%s %*d | %s %*d - state: %s\n", stringToTest.c_str(), integerSize, stringPointer, glob.c_str(), integerSize, globPointer, stateType.c_str());
-        printf("%*s%*s\n", stringPointer + 1, "^", (int)((stringToTest.size() - stringPointer) + 4 + integerSize + globPointer), "^");
-    }
-
-#define PrintInfo() doPrint(std::string(stringToTest), stringPointer, std::string(glob), globPointer, state);
-
-    // assume no ***
     bool GlobStep(std::string_view glob, std::string_view stringToTest, SearchState state = SearchState::normal, int globPointer = 0, int stringPointer = 0)
     {
-        branchCount++;
-
         while (globPointer <= glob.size() && stringPointer <= stringToTest.size())
         {
-            iterationCount++;
-
             const char currentGlobCharacter = glob[globPointer];
             const char currentStringCharacter = stringToTest[stringPointer];
 
@@ -82,7 +28,7 @@ namespace Glob
             {
                 if (currentGlobCharacter == '*')
                 {
-                    return GlobStep(glob, stringToTest, SearchState::asterisk, globPointer, stringPointer);
+                    state = SearchState::asterisk;
                 }
             }
             break;
@@ -94,7 +40,7 @@ namespace Glob
 
                     if (nextGlobCharacter == '*')
                     {
-                        return GlobStep(glob, stringToTest, SearchState::doubleAsterisk, globPointer, stringPointer);
+                        state = SearchState::doubleAsterisk;
                     }
                 }
             }
@@ -107,7 +53,7 @@ namespace Glob
 
                     if (nextGlobCharacter == '*')
                     {
-                        ThrowError();
+                        // ThrowError();
 
                         return false;
                     }
@@ -116,6 +62,7 @@ namespace Glob
             break;
             }
 
+            // check final character
             if (stringPointer == stringToTest.size())
             {
                 // only successful if the current glob pointer is complete, or the last character is an asterisk
@@ -146,12 +93,7 @@ namespace Glob
             {
             case SearchState::normal:
             {
-                if (currentGlobCharacter == '*')
-                {
-                    return GlobStep(glob, stringToTest, SearchState::asterisk, globPointer, stringPointer);
-                }
-
-                if (currentGlobCharacter == '?')
+                if (currentGlobCharacter == '?' && currentStringCharacter != '/')
                 {
                     globPointer++;
                     stringPointer++;
@@ -177,35 +119,28 @@ namespace Glob
                 {
                     const char nextGlobCharacter = glob[globPointer + 1];
 
-                    if (nextGlobCharacter == '*')
+                    // std::cout << glob << " | " << stringToTest << " | " << currentGlobCharacter << " | " << nextGlobCharacter << std::endl;
+                    //  check next character if it matches the string
+
+                    // if it matches, start a normal check
+                    if (currentStringCharacter == '/')
                     {
-                        return GlobStep(glob, stringToTest, SearchState::doubleAsterisk, globPointer, stringPointer);
+                        // next string character is a slash, so escape
+                        return GlobStep(glob, stringToTest, SearchState::normal, globPointer + 1, stringPointer);
+                    }
+                    else if (currentStringCharacter == nextGlobCharacter || nextGlobCharacter == '?')
+                    {
+                        if (GlobStep(glob, stringToTest, SearchState::normal, globPointer + 1, stringPointer))
+                        {
+                            return true;
+                        }
+
+                        stringPointer++;
                     }
                     else
                     {
-                        // std::cout << glob << " | " << stringToTest << " | " << currentGlobCharacter << " | " << nextGlobCharacter << std::endl;
-                        //  check next character if it matches the string
-
-                        // if it matches, start a normal check
-                        if (currentStringCharacter == '/')
-                        {
-                            // next string character is a slash, so escape
-                            return GlobStep(glob, stringToTest, SearchState::normal, globPointer + 1, stringPointer);
-                        }
-                        else if (currentStringCharacter == nextGlobCharacter)
-                        {
-                            if (GlobStep(glob, stringToTest, SearchState::normal, globPointer + 1, stringPointer))
-                            {
-                                return true;
-                            }
-
-                            stringPointer++;
-                        }
-                        else
-                        {
-                            // go next string character
-                            stringPointer++;
-                        }
+                        // go next string character
+                        stringPointer++;
                     }
                 }
                 else
@@ -227,13 +162,6 @@ namespace Glob
                 if (globPointer < (glob.size() - 2))
                 {
                     const char nextGlobCharacter = glob[globPointer + 2];
-
-                    if (nextGlobCharacter == '*')
-                    {
-                        ThrowError();
-
-                        return false;
-                    }
 
                     // check next string character
                     //  check next character if it matches the string
@@ -278,11 +206,11 @@ namespace Glob
     {
         // search for first wildcard
         // ignore square brackets for now
-        for(int characterIndex = 0; characterIndex < glob.size(); ++characterIndex)
+        for (int characterIndex = 0; characterIndex < glob.size(); ++characterIndex)
         {
             const char currentGlobCharacter = glob[characterIndex];
 
-            if(currentGlobCharacter == '?' || currentGlobCharacter == '*')
+            if (currentGlobCharacter == '?' || currentGlobCharacter == '*')
             {
                 return glob.substr(0, characterIndex);
             }

@@ -74,11 +74,6 @@ bool RunGlobTest(const GlobRequest& request)
     return success;
 }
 
-namespace Glob
-{
-    void PrintCounts();
-}
-
 void RunAllGlobTests()
 {
     bool failure = false;
@@ -95,6 +90,4 @@ void RunAllGlobTests()
     {
         std::cout << "Succeeded!" << std::endl;
     }
-
-    Glob::PrintCounts();
 }
