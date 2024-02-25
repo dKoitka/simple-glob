@@ -9,10 +9,61 @@ namespace Glob
 {
     enum class SearchState
     {
+        invalid,
         normal,
         asterisk,
         doubleAsterisk
     };
+
+    SearchState GetNewState(SearchState state, std::string_view glob, int globPointer)
+    {
+        const char currentGlobCharacter = glob[globPointer];
+
+        // Move into an appropriate state if we're at a specific character
+        switch (state)
+        {
+        case SearchState::normal:
+        {
+            if (currentGlobCharacter == '*')
+            {
+                return SearchState::asterisk;
+            }
+        }
+        break;
+        case SearchState::asterisk:
+        {
+            if (globPointer < (glob.size() - 1))
+            {
+                const char nextGlobCharacter = glob[globPointer + 1];
+
+                if (nextGlobCharacter == '*')
+                {
+                    return SearchState::doubleAsterisk;
+                }
+            }
+        }
+        break;
+        case SearchState::doubleAsterisk:
+        {
+            if (globPointer < (glob.size() - 2))
+            {
+                const char nextGlobCharacter = glob[globPointer + 2];
+
+                if (nextGlobCharacter == '*')
+                {
+                    return SearchState::invalid;
+                }
+            }
+        }
+        break;
+        case SearchState::invalid:
+        {
+            return SearchState::invalid;
+        }
+        }
+
+        return SearchState::normal;
+    }
 
     bool GlobStep(std::string_view glob, std::string_view stringToTest, SearchState state = SearchState::normal, int globPointer = 0, int stringPointer = 0)
     {
@@ -21,46 +72,7 @@ namespace Glob
             const char currentGlobCharacter = glob[globPointer];
             const char currentStringCharacter = stringToTest[stringPointer];
 
-            // Move into an appropriate state if we're at a specific character
-            switch (state)
-            {
-            case SearchState::normal:
-            {
-                if (currentGlobCharacter == '*')
-                {
-                    state = SearchState::asterisk;
-                }
-            }
-            break;
-            case SearchState::asterisk:
-            {
-                if (globPointer < (glob.size() - 1))
-                {
-                    const char nextGlobCharacter = glob[globPointer + 1];
-
-                    if (nextGlobCharacter == '*')
-                    {
-                        state = SearchState::doubleAsterisk;
-                    }
-                }
-            }
-            break;
-            case SearchState::doubleAsterisk:
-            {
-                if (globPointer < (glob.size() - 2))
-                {
-                    const char nextGlobCharacter = glob[globPointer + 2];
-
-                    if (nextGlobCharacter == '*')
-                    {
-                        // ThrowError();
-
-                        return false;
-                    }
-                }
-            }
-            break;
-            }
+            state = GetNewState(state, glob, globPointer);
 
             // check final character
             if (stringPointer == stringToTest.size())
@@ -189,6 +201,11 @@ namespace Glob
                 }
             }
             break;
+            case SearchState::invalid:
+            {
+                return false;
+            }
+            break;
             }
         }
 
@@ -212,7 +229,7 @@ namespace Glob
         {
             const char currentGlobCharacter = glob[characterIndex];
 
-            if(currentGlobCharacter == '/')
+            if (currentGlobCharacter == '/')
             {
                 lastPathSeparator = characterIndex + 1;
             }

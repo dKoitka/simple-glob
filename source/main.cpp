@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     
     for(auto currentPath : paths)
     {
-        std::cout << currentPath << std::endl;
+        std::cout << currentPath.filename() << " | " <<  currentPath << std::endl;
     }
 
     return 0;
