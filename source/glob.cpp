@@ -9,13 +9,13 @@ namespace Glob
 {
     enum class SearchState
     {
-        invalid,
+        invalid = -1,
         normal,
         asterisk,
         doubleAsterisk
     };
 
-    SearchState GetNewState(SearchState state, std::string_view glob, int globPointer)
+    SearchState GetNewState(const SearchState state, const std::string_view glob, const int globPointer)
     {
         const char currentGlobCharacter = glob[globPointer];
 
@@ -26,7 +26,7 @@ namespace Glob
         {
             if (currentGlobCharacter == '*')
             {
-                return SearchState::asterisk;
+                return GetNewState(SearchState::asterisk, glob, globPointer);
             }
         }
         break;
@@ -38,7 +38,7 @@ namespace Glob
 
                 if (nextGlobCharacter == '*')
                 {
-                    return SearchState::doubleAsterisk;
+                    return GetNewState(SearchState::doubleAsterisk, glob, globPointer);
                 }
             }
         }
@@ -62,16 +62,13 @@ namespace Glob
         }
         }
 
-        return SearchState::normal;
+        return state;
     }
 
     bool GlobStep(std::string_view glob, std::string_view stringToTest, SearchState state = SearchState::normal, int globPointer = 0, int stringPointer = 0)
     {
         while (globPointer <= glob.size() && stringPointer <= stringToTest.size())
         {
-            const char currentGlobCharacter = glob[globPointer];
-            const char currentStringCharacter = stringToTest[stringPointer];
-
             state = GetNewState(state, glob, globPointer);
 
             // check final character
@@ -90,7 +87,6 @@ namespace Glob
                 {
                     return true;
                 }
-
                 // we still had part of the glob to check
                 return false;
             }
@@ -100,6 +96,9 @@ namespace Glob
                 // we shouldn't be at the end if not also at the end of the string, so we failed
                 return false;
             }
+
+            const char currentGlobCharacter = glob[globPointer];
+            const char currentStringCharacter = stringToTest[stringPointer];
 
             switch (state)
             {

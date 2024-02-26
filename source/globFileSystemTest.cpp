@@ -13,7 +13,7 @@ void TestFileSystem(std::string_view glob, std::vector<std::filesystem::path>& o
 
         if(currentEntry.is_directory())
         {
-            //pathFromEntry += "/";
+            pathFromEntry += "/";
         }
 
         if(Glob::QueryGlob(glob, pathFromEntry))

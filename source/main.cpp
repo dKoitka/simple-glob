@@ -8,18 +8,23 @@ Code, Compile, Run and Debug online from anywhere in world.
 *******************************************************************************/
 #include "glob.h"
 
+#include "globUnitTest.h"
 #include "globFileSystemTest.h"
 
+int mainUnitTest(int argc, char** argv)
+{
+    RunAllGlobTests();
 
-int main(int argc, char** argv)
+    return 0;
+}
+
+int mainFileSystem(int argc, char** argv)
 {
     if(argc != 2)
     {
         printf("glob search");
         return 0;
     }
-
-    // look for root direcotry without star
 
     std::vector<std::filesystem::path> paths;
 
@@ -31,5 +36,11 @@ int main(int argc, char** argv)
     }
 
     return 0;
+}
+
+int main(int argc, char** argv)
+{
+//    return mainUnitTest(argc, argv);
+    return mainFileSystem(argc, argv);
 }
 
