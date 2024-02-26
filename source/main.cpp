@@ -8,6 +8,7 @@ Code, Compile, Run and Debug online from anywhere in world.
 *******************************************************************************/
 #include "glob.h"
 
+#include <string.h>
 #include "globUnitTest.h"
 #include "globFileSystemTest.h"
 
