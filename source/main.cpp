@@ -32,7 +32,7 @@ int mainFileSystem(int argc, char** argv)
     
     for(auto currentPath : paths)
     {
-        std::cout << currentPath.filename() << " | " <<  currentPath << std::endl;
+        std::cout << currentPath << std::endl;
     }
 
     return 0;
@@ -40,7 +40,16 @@ int mainFileSystem(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-//    return mainUnitTest(argc, argv);
-    return mainFileSystem(argc, argv);
+    if(argc == 2)
+    {
+        if(strcmp(argv[1], "--unit-test") == 0)
+        {
+            return mainUnitTest(argc, argv);
+        }
+        else
+        {
+            return mainFileSystem(argc, argv);
+        }
+    }
 }
 
